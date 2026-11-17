@@ -8,7 +8,7 @@ End-user setup is in [instructions.md](instructions.md): whitelist a pubkey, bin
 
 | | |
 |---|---|
-| route96 | `voidic/route96:v0.7.0` pinned by multi-arch digest (upstream's latest stable release tag, 2026-04-10), rebuilt locally from `docker/route96.Dockerfile` only to refresh `ca-certificates` |
+| route96 | `voidic/route96:v0.8.0` pinned by multi-arch digest (upstream's latest stable release tag, 2026-11-09), rebuilt locally from `docker/route96.Dockerfile` only to refresh `ca-certificates` |
 | Database | `mariadb:11.4.13` (LTS) pinned by digest, rebuilt locally from `docker/mariadb.Dockerfile` only to refresh `ca-certificates` |
 | Arches | `x86_64`, `aarch64` |
 
@@ -20,7 +20,7 @@ There are two daemons and one oneshot in a single package:
 2. **sync-db-config** (oneshot): deletes the `public_url` and `max_upload_bytes` rows from route96's `config` table (see "Gotchas").
 3. **route96**: listens on `0.0.0.0:8000` and runs `route96 --config /config/config.yaml`. Blobs are stored on volume `main`, mounted at `/app/data`.
 
-**Why MariaDB and not SQLite?** route96 v0.7.0 supports only MySQL/MariaDB. `sqlx` is built with the `mysql` feature only, and every migration is MySQL dialect. SQLite isn't an option without patching upstream, so MariaDB runs as a second daemon in the same package.
+**Why MariaDB and not SQLite?** route96 v0.8.0 supports only MySQL/MariaDB. `sqlx` is built with the `mysql` feature only, and every migration is MySQL dialect. SQLite isn't an option without patching upstream, so MariaDB runs as a second daemon in the same package.
 
 ### Volumes
 
@@ -77,7 +77,7 @@ There is **no total storage cap**. route96 has no global limit, only per-user qu
 
 ## Gotchas
 
-- **The DB `config` table shadows `config.yaml`.** route96 seeds a `config` table from the file using `INSERT IGNORE`, then layers the table *over* the file. Without intervention, a changed `public_url` or `max_upload_bytes` would never take effect after the first start. The `sync-db-config` oneshot deletes those two rows before each start, and route96 re-seeds them from the file. If you manage more keys from StartOS, add them to that `DELETE`. This was verified locally: before the fix, a changed `public_url` was ignored.
+- **The DB `config` table shadows `config.yaml`.** route96 seeds a `config` table from the file using `INSERT IGNORE`, then layers the table *over* the file. Without intervention, a changed `public_url` or `max_upload_bytes` would never take effect after the first start. The `sync-db-config` oneshot deletes those two rows before each start, and route96 re-seeds them from the file. If you manage more keys from StartOS, add them to that `DELETE`. This was verified locally: before the fix, a changed `public_url` was ignored. Since v0.8.0 (upstream #93) route96 no longer *seeds* these two keys, but it still *reads* any existing row, so databases created by 0.7.0 keep needing the cleanup.
 - **Omitting `whitelist` means anyone can upload.** Never drop the key.
 - An oversized upload returns HTTP 500 from upstream, not 413. It is still rejected.
 

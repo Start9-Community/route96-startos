@@ -1,21 +1,23 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '0.7.0:2',
+  version: '0.8.0:0',
   releaseNotes: {
     en_US:
-      'Requires StartOS 0.4.1 or later. Fixes memory use growing while the service runs, and keeps the MariaDB password out of the process list. Built with start-sdk 4.0.0. route96 itself is unchanged (v0.7.0).',
+      'Updates route96 to v0.8.0: security audit fixes, full Blossom compliance (179/179 tests), correct HTTP status codes, CORS and mirror redirect fixes, and an admin option to ban uploaders. The database is migrated automatically on first start; going back to 0.7.0 afterwards is not possible. Built with start-sdk 4.1.0.',
     es_ES:
-      'Requiere StartOS 0.4.1 o posterior. Corrige el aumento del uso de memoria mientras el servicio está en ejecución y mantiene la contraseña de MariaDB fuera de la lista de procesos. Compilado con start-sdk 4.0.0. route96 no cambia (v0.7.0).',
+      'Actualiza route96 a v0.8.0: correcciones de la auditoría de seguridad, compatibilidad completa con Blossom (179/179 pruebas), códigos de estado HTTP correctos, correcciones de CORS y de redirecciones al replicar, y una opción de administración para bloquear a quienes suben archivos. La base de datos se migra automáticamente en el primer inicio; después no es posible volver a 0.7.0. Compilado con start-sdk 4.1.0.',
     de_DE:
-      'Erfordert StartOS 0.4.1 oder neuer. Behebt einen während der Laufzeit des Dienstes ansteigenden Speicherverbrauch und hält das MariaDB-Passwort aus der Prozessliste heraus. Gebaut mit start-sdk 4.0.0. route96 selbst ist unverändert (v0.7.0).',
+      'Aktualisiert route96 auf v0.8.0: Korrekturen aus dem Sicherheitsaudit, volle Blossom-Kompatibilität (179/179 Tests), korrekte HTTP-Statuscodes, Korrekturen bei CORS und Weiterleitungen beim Spiegeln sowie eine Admin-Option zum Sperren von Uploadern. Die Datenbank wird beim ersten Start automatisch migriert; eine Rückkehr zu 0.7.0 ist danach nicht möglich. Gebaut mit start-sdk 4.1.0.',
     pl_PL:
-      'Wymaga StartOS 0.4.1 lub nowszego. Naprawia wzrost zużycia pamięci podczas działania usługi i usuwa hasło MariaDB z listy procesów. Zbudowano z start-sdk 4.0.0. Sam route96 bez zmian (v0.7.0).',
+      'Aktualizuje route96 do v0.8.0: poprawki z audytu bezpieczeństwa, pełna zgodność z Blossom (179/179 testów), poprawne kody statusu HTTP, poprawki CORS i przekierowań przy kopiowaniu oraz opcja administratora do blokowania przesyłających. Baza danych jest migrowana automatycznie przy pierwszym uruchomieniu; powrót do 0.7.0 nie jest potem możliwy. Zbudowano z start-sdk 4.1.0.',
     fr_FR:
-      "Nécessite StartOS 0.4.1 ou une version ultérieure. Corrige l'augmentation de la consommation de mémoire pendant le fonctionnement du service et retire le mot de passe MariaDB de la liste des processus. Compilé avec start-sdk 4.0.0. route96 lui-même est inchangé (v0.7.0).",
+      "Met à jour route96 vers la v0.8.0 : corrections issues de l'audit de sécurité, conformité Blossom complète (179/179 tests), codes de statut HTTP corrects, corrections CORS et des redirections lors de la mise en miroir, et une option d'administration pour bannir des utilisateurs qui téléversent. La base de données est migrée automatiquement au premier démarrage ; revenir ensuite à la 0.7.0 n'est pas possible. Compilé avec start-sdk 4.1.0.",
   },
   migrations: {
     up: async ({ effects }) => {},
-    down: async ({ effects }) => {},
+    // route96 0.8.0 applies the user_ban DB migration on start; 0.7.0's sqlx
+    // migrator refuses a database with a migration it doesn't know.
+    down: IMPOSSIBLE,
   },
 })

@@ -1,50 +1,41 @@
-# route96 (Blossom)
+# route96
 
-route96 is a [Blossom](https://github.com/hzrd149/blossom) media server for Nostr. Nostr clients upload images and video to it and get back a link, which they then put in your notes. It also speaks NIP-96.
+## Documentation
 
-**Out of the box nobody can upload.** Downloads of existing blobs are public. Uploads, mirroring and deleting are limited to pubkeys you whitelist.
+- [route96 README](https://github.com/v0l/route96/blob/main/README.md) — features, API endpoints and authentication
+- [Blossom](https://github.com/hzrd149/blossom) — the Blossom protocol specification (BUDs)
 
-## 1. Whitelist your pubkey
+## What you get on StartOS
 
-1. Open **Actions → Uploader Whitelist**.
-2. Add your Nostr public key, either `npub1…` or 64-character hex. You can add more than one, for example a second account.
-3. Save. route96 restarts with the new list. The **Uploads** health check on the dashboard shows how many uploaders are allowed.
+A media server your Nostr clients upload images and video to. Anyone can download what is stored on it; only the Nostr keys you whitelist can upload, mirror and delete. The **Blossom API** interface serves both the API your clients use and route96's own web page.
 
-To block all uploads again, remove every entry.
+## Getting set up
 
-## 2. Bind a public domain (StartTunnel)
+1. Add a public domain to the **Blossom API** interface. Nostr clients, and everyone who reads your notes, have to load your media from it.
+2. Run **Set Public URL** and choose that domain's `https://` address. route96 writes this address into every link it hands back, so an address other people can't reach makes your media unloadable.
+3. Run **Uploader Whitelist** and add your Nostr public key, as `npub1…` or 64-character hex. Add any other accounts that should be able to upload.
+4. In your Nostr client, add your public URL as a Blossom or media server (in Amethyst, Primal, noStrudel or Coracle look for "Media servers" or "Blossom servers") and make it your upload server. Sign in to the client with a key you whitelisted.
 
-Nostr clients and the people who read your notes have to reach the server from the internet.
+Until step 3, every upload is refused.
 
-1. Open the **Blossom API** interface on the dashboard.
-2. Add your StartTunnel clearnet domain (for example `blossom.example.com`) to it, with HTTPS.
-3. Check that `https://blossom.example.com/` loads the route96 page.
+## Using route96
 
-## 3. Set the public URL
+### Actions
 
-route96 writes the server's URL into every blob link it returns, so that URL must be the public one.
+- **Uploader Whitelist** — who may upload. Remove every entry to stop all uploads.
+- **Set Public URL** — the address put in links. Run it again if you change domains.
+- **Server Settings** — the largest file accepted (100 MiB unless you change it), and a custom public URL for an address that isn't listed in **Set Public URL**, such as a reverse proxy you run elsewhere. A custom URL takes priority; clear it to go back to your **Set Public URL** choice.
 
-1. Open **Actions → Set Public URL**.
-2. Pick your StartTunnel domain (the `https://` entry) and save.
+Each action restarts route96 for a few seconds.
 
-The **Public URL** health check shows what is being advertised now. If your public address doesn't appear in the list (for example, you run your own reverse proxy outside StartOS), enter it under **Actions → Server Settings → Custom Public URL** instead. A value there overrides the choice above.
+### Web interface
 
-## 4. Point your Nostr client at it
+Opening the **Blossom API** interface shows route96's upload page. Its admin pages need an admin account, which this service does not set up.
 
-Use the public URL, e.g. `https://blossom.example.com`, and sign in to the client with the key you whitelisted.
+### Mirroring and your home IP
 
-- **Amethyst**: Settings → Media Servers → add a Blossom server. Paste the URL, then select it as the default upload server.
-- **Primal**: Settings → Media Uploads → Blossom server. Set it to your URL. Some versions call this "Media server". You can also add it as a mirror.
-- **Other clients** (noStrudel, Coracle, etc.): look for "Blossom servers" or "Media servers" and add the URL.
-
-Many clients also publish your server list as a kind 10063 event, so other Blossom-aware apps can find your media.
-
-## Other settings
-
-**Actions → Server Settings → Maximum Upload Size** sets the largest file accepted. The default is 100 MiB.
+When a client asks route96 to mirror a file from another server, route96 downloads it itself, so that server sees your server's address. If you publish route96 through a tunnel to keep your home IP private, send its outbound traffic through that tunnel too. If you use the tunnel for another reason, such as a port your router can't forward, there is nothing to change.
 
 ## Limitations
 
-- **There is no total storage cap.** route96 can only enforce per-user quotas through its Lightning payment system, and this package leaves that off. Disk use is bounded only by your whitelist and the free space on your server. Check the server's storage page now and then.
-- AI content labelling, paid plans and analytics are off.
-- The route96 web UI at `/` works, but its admin features need an admin user, which this package doesn't set up.
+- There is no limit on total storage. Disk use grows with what your whitelisted keys upload, so keep an eye on free space.

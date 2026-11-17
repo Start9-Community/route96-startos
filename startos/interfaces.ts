@@ -12,7 +12,7 @@ export const setInterfaces = sdk.setupInterfaces(async ({ effects }) => {
     name: i18n('Blossom API'),
     id: blossomInterfaceId,
     description: i18n(
-      'Blossom / NIP-96 HTTP API (and the route96 web UI at /). Bind your StartTunnel clearnet domain to this interface.',
+      'The Blossom and NIP-96 media API, and the route96 web UI',
     ),
     type: 'ui',
     masked: false,

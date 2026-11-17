@@ -1,13 +1,10 @@
 # AGENTS.md
 
-StartOS service-package repository for route96 (Blossom server). Full packaging guide: <https://docs.start9.com/packaging>.
+This is a StartOS service-package repository — it builds a `.s9pk` for StartOS.
 
-Keep `README.md` (technical reference) and `instructions.md` (end-user docs) in sync with your changes.
+Develop it inside a StartOS packaging workspace created by `start-cli s9pk init-workspace`,
+which provides the packaging guide and agent context one level up. If you're reading this in a
+bare clone with no workspace, the full guide is at <https://docs.start9.com/packaging>.
 
-## This repo
-
-- `store.json` is the source of truth. `config.yaml` is regenerated from it by `main.ts` on every start, so never hand-edit `config.yaml`.
-- route96's DB `config` table overrides `config.yaml` (it is seeded once with INSERT IGNORE). Any key you start managing from StartOS must also be added to the `DELETE` in the `sync-db-config` oneshot in `main.ts`, or changes to it silently won't apply.
-- Always write the `whitelist` key. Leaving it out opens uploads to everyone.
-- Updating upstream: bump both the tag and the digest of `voidic/route96` in the `FROM` line of `docker/route96.Dockerfile` (MariaDB: `docker/mariadb.Dockerfile`). Both images are built locally (`dockerBuild` in `startos/manifest/index.ts`) only to refresh `ca-certificates`; keep that step. Check the new release's `src/settings.rs` and `migrations/` for config or DB changes.
-- i18n: every `i18n('…')` string needs an entry in `startos/i18n/dictionaries/default.ts` and a translation for every locale in `translations.ts`.
+- Never let `main.ts` write `config.yaml` without a `whitelist` key: route96 treats a missing key as open uploads, which is why an empty list is written as a sentinel.
+- Every key the package writes to `config.yaml` must be one upstream's `should_skip` (`src/db_config.rs`) keeps out of its database `config` table. A seeded key is shadowed by its first-run value forever, so a new managed key, or an upstream bump that stops skipping one, needs that row deleted before route96 starts.

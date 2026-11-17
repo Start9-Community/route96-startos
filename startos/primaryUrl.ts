@@ -3,9 +3,6 @@ import { i18n } from './i18n'
 import { sdk } from './sdk'
 import { blossomInterfaceId, mainHostId } from './utils'
 
-// The URL route96 advertises in blob descriptors (`url` field of BUD-02
-// responses). Chosen from the Blossom interface's own StartOS addresses, so a
-// StartTunnel clearnet domain bound to that interface shows up here.
 export const primaryUrl = sdk.setupPrimaryUrl({
   id: 'set-public-url',
   hostId: mainHostId,

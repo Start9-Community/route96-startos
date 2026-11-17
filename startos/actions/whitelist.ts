@@ -47,7 +47,6 @@ export const setWhitelist = sdk.Action.withInput(
   }),
   async ({ effects, input }) => {
     const cleaned = input.pubkeys.map((p) => p.trim()).filter(Boolean)
-    // Validate fully (incl. npub checksum) before saving.
     for (const p of cleaned) toHexPubkey(p)
     await storeJson.merge(effects, { whitelist: [...new Set(cleaned)] })
   },

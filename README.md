@@ -6,11 +6,11 @@ End-user setup is in [instructions.md](instructions.md): whitelist a pubkey, bin
 
 ## Upstream
 
-| | |
-|---|---|
-| route96 | `voidic/route96:v0.7.0` pinned by multi-arch digest (upstream's latest stable release tag, 2026-04-10), rebuilt locally from `docker/route96.Dockerfile` only to refresh `ca-certificates` |
-| Database | `mariadb:11.4.13` (LTS) pinned by digest, rebuilt locally from `docker/mariadb.Dockerfile` only to refresh `ca-certificates` |
-| Arches | `x86_64`, `aarch64` |
+|          |                                                                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| route96  | `voidic/route96` at upstream's latest stable release tag, pinned by multi-arch digest, rebuilt locally from `docker/route96.Dockerfile` only to refresh `ca-certificates` |
+| Database | `mariadb` LTS, pinned by digest, rebuilt locally from `docker/mariadb.Dockerfile` only to refresh `ca-certificates`                                                       |
+| Arches   | `x86_64`, `aarch64`                                                                                                                                                       |
 
 ## Architecture
 
@@ -20,14 +20,14 @@ There are two daemons and one oneshot in a single package:
 2. **sync-db-config** (oneshot): deletes the `public_url` and `max_upload_bytes` rows from route96's `config` table (see "Gotchas").
 3. **route96**: listens on `0.0.0.0:8000` and runs `route96 --config /config/config.yaml`. Blobs are stored on volume `main`, mounted at `/app/data`.
 
-**Why MariaDB and not SQLite?** route96 v0.7.0 supports only MySQL/MariaDB. `sqlx` is built with the `mysql` feature only, and every migration is MySQL dialect. SQLite isn't an option without patching upstream, so MariaDB runs as a second daemon in the same package.
+**Why MariaDB and not SQLite?** route96 supports only MySQL/MariaDB. `sqlx` is built with the `mysql` feature only, and every migration is MySQL dialect. SQLite isn't an option without patching upstream, so MariaDB runs as a second daemon in the same package.
 
 ### Volumes
 
-| Volume | Contents |
-|---|---|
-| `main` | Blob files (`/app/data`) |
-| `mysql` | MariaDB datadir |
+| Volume    | Contents                                                                                                                    |
+| --------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `main`    | Blob files (`/app/data`)                                                                                                    |
+| `mysql`   | MariaDB datadir                                                                                                             |
 | `startos` | `store.json` (package state, source of truth) and the generated `config.yaml` (mounted read-only into route96 at `/config`) |
 
 Backups use `Backups.withMariadbDump` (a logical dump) and also back up the `main` and `startos` volumes.
@@ -47,22 +47,22 @@ There is one HTTP interface, **Blossom API** (host `main`, interface `blossom`, 
 
 `main.ts` regenerates `config.yaml` from `store.json` on every start:
 
-| route96 key | Source |
-|---|---|
-| `listen` | fixed `0.0.0.0:8000` |
-| `database` | `mysql://root:<pw>@127.0.0.1:3306/route96` |
-| `storage_dir` | fixed `/app/data` |
-| `max_upload_bytes` | **Server Settings** action (MiB, default 100) |
-| `public_url` | **Server Settings → Custom Public URL** if set, else the **Set Public URL** choice (`sdk.setupPrimaryUrl`, preferring a public HTTPS domain), else `http://127.0.0.1:8000` |
-| `whitelist` | **Uploader Whitelist** action. npubs are decoded to hex. Always written as an inline list. When it is empty, the list holds the sentinel `no-uploaders-configured`, which can never match a pubkey. |
+| route96 key        | Source                                                                                                                                                                                              |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `listen`           | fixed `0.0.0.0:8000`                                                                                                                                                                                |
+| `database`         | `mysql://root:<pw>@127.0.0.1:3306/route96`                                                                                                                                                          |
+| `storage_dir`      | fixed `/app/data`                                                                                                                                                                                   |
+| `max_upload_bytes` | **Server Settings** action (MiB, default 100)                                                                                                                                                       |
+| `public_url`       | **Server Settings → Custom Public URL** if set, else the **Set Public URL** choice (`sdk.setupPrimaryUrl`, preferring a public HTTPS domain), else `http://127.0.0.1:8000`                          |
+| `whitelist`        | **Uploader Whitelist** action. npubs are decoded to hex. Always written as an inline list. When it is empty, the list holds the sentinel `no-uploaders-configured`, which can never match a pubkey. |
 
 ### Actions
 
-| Id | Purpose |
-|---|---|
-| `set-whitelist` | List of npub/hex uploader pubkeys (validated, including the bech32 checksum). Empty means no uploads. A task is raised on install. |
-| `set-public-url` | Picks one of the interface's addresses as `public_url`. A task is raised while unset or stale. |
-| `server-settings` | Max upload size (MiB) and an optional free-form public URL override |
+| Id                | Purpose                                                                                                                            |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `set-whitelist`   | List of npub/hex uploader pubkeys (validated, including the bech32 checksum). Empty means no uploads. A task is raised on install. |
+| `set-public-url`  | Picks one of the interface's addresses as `public_url`. A task is raised while unset or stale.                                     |
+| `server-settings` | Max upload size (MiB) and an optional free-form public URL override                                                                |
 
 ### Features left off
 
@@ -77,7 +77,7 @@ There is **no total storage cap**. route96 has no global limit, only per-user qu
 
 ## Gotchas
 
-- **The DB `config` table shadows `config.yaml`.** route96 seeds a `config` table from the file using `INSERT IGNORE`, then layers the table *over* the file. Without intervention, a changed `public_url` or `max_upload_bytes` would never take effect after the first start. The `sync-db-config` oneshot deletes those two rows before each start, and route96 re-seeds them from the file. If you manage more keys from StartOS, add them to that `DELETE`. This was verified locally: before the fix, a changed `public_url` was ignored.
+- **The DB `config` table shadows `config.yaml`.** route96 seeds a `config` table from the file using `INSERT IGNORE`, then layers the table _over_ the file. Without intervention, a changed `public_url` or `max_upload_bytes` would never take effect after the first start. The `sync-db-config` oneshot deletes those two rows before each start, and route96 re-seeds them from the file. If you manage more keys from StartOS, add them to that `DELETE`. This was verified locally: before the fix, a changed `public_url` was ignored. Newer route96 releases (upstream #93) no longer _seed_ these two keys, but they still _read_ any existing row, so databases created by older releases keep needing the cleanup.
 - **Omitting `whitelist` means anyone can upload.** Never drop the key.
 - An oversized upload returns HTTP 500 from upstream, not 413. It is still rejected.
 

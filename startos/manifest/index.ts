@@ -14,7 +14,7 @@ export const manifest = setupManifest({
   volumes: ['main', 'mysql', 'startos'],
   images: {
     route96: {
-      // voidic/route96:v0.7.0 plus a current CA bundle, see docker/route96.Dockerfile
+      // voidic/route96:v0.8.0 plus a current CA bundle, see docker/route96.Dockerfile
       source: {
         dockerBuild: {
           workdir: './docker',

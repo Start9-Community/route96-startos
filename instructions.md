@@ -36,6 +36,10 @@ Opening the **Blossom API** interface shows route96's upload page. Its admin pag
 
 When a client asks route96 to mirror a file from another server, route96 downloads it itself, so that server sees your server's address. If you publish route96 through a tunnel to keep your home IP private, send its outbound traffic through that tunnel too. If you use the tunnel for another reason, such as a port your router can't forward, there is nothing to change.
 
+### After restoring from a backup
+
+Your media, settings and whitelist come back, but StartOS leaves the public domain switched off. Start route96, open the **Blossom API** interface and enable your public domain again. Until you do, the links route96 hands out point to a local address that Nostr clients can't reach.
+
 ## Limitations
 
 - There is no limit on total storage. Disk use grows with what your whitelisted keys upload, so keep an eye on free space.

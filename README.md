@@ -125,7 +125,7 @@ All three volumes are copied whole (`ofVolumes`): `main` (blobs), `mysql` (the M
 
 The datadir is copied as files, not dumped. StartOS stops the service before backing up, and InnoDB recovers a copy taken after an unclean stop the way it would after a power loss. The restore reinstalls the same package version, so the same MariaDB reads the files back, with its accounts intact.
 
-A restored instance needs nothing re-entered. Backups are as large as the stored media.
+The package's own data needs nothing re-entered: blobs, the database, the whitelist and both public URL settings come back. StartOS does not restore the interface's public domain, though. After a restore the domain is still listed on the `blossom` interface but disabled, so the `set-public-url` task is raised and new links carry a LAN address until the domain is enabled again. A `customPublicUrl` is kept in `store.json` and survives the restore. The restored service is stopped until started. Backups are as large as the stored media.
 
 ## Limitations and Differences
 

@@ -37,6 +37,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   const maxUploadBytes = Math.round(store.maxUploadMib * MIB)
 
   await configYaml.write(effects, {
+    // Loopback only. A bridge listener bypasses the proxy's `/setup` block.
     listen: `127.0.0.1:${route96Port}`,
     database: `mysql://root:${store.dbPassword}@127.0.0.1:3306/${DB_NAME}`,
     storage_dir: STORAGE_DIR,

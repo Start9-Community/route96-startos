@@ -120,8 +120,8 @@ Both tasks are `important`: they never block the service.
 | Check     | Probes                        | Grace | Failure means                                                                                                                                            |
 | --------- | ----------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `mariadb` | `mariadb-admin ping` over TCP | 120 s | MariaDB has not finished starting or is crash-recovering. Persisting past the grace period means a datadir problem; read the `mariadb` lines in the logs |
-| `route96` | `GET http://127.0.0.1:8001/`  | 60 s  | Internal readiness: route96 is not listening. It exits if it cannot reach MariaDB or a migration fails; the logs say which                                |
-| `proxy`   | `GET http://127.0.0.1:8000/`  | 60 s  | nginx has not started or its generated config is invalid; read the `proxy` lines in the logs                                                          |
+| `route96` | `GET http://127.0.0.1:8001/`  | 60 s  | Internal readiness: route96 is not listening. It exits if it cannot reach MariaDB or a migration fails; the logs say which                               |
+| `proxy`   | `GET http://127.0.0.1:8000/`  | 60 s  | nginx has not started or its generated config is invalid; read the `proxy` lines in the logs                                                             |
 
 ## Backups and Restore
 

@@ -1,6 +1,6 @@
 # Updating the upstream version
 
-route96 comes from upstream's published image, `voidic/route96`, rebuilt by `docker/route96.Dockerfile` only to refresh `ca-certificates`. MariaDB is the official `mariadb` image, pulled by tag.
+route96 comes from upstream's published image, `voidic/route96`, rebuilt by `docker/route96.Dockerfile` only to refresh `ca-certificates`. MariaDB is the official `mariadb` image, pulled by tag. The nginx front proxy uses an exact release tag and multi-arch index digest in `startos/manifest/index.ts`; update both together after inspecting the replacement with `docker buildx imagetools inspect nginx:<tag>`.
 
 ## Determining the upstream version
 

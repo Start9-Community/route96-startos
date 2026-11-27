@@ -32,16 +32,17 @@
 
 ## Image and Container Runtime
 
-Two images run in two subcontainers: route96 itself and the MariaDB it requires (route96 supports no other database).
+Three images run route96, the MariaDB it requires, and an nginx front proxy. The proxy blocks web setup; route96 itself listens only on loopback.
 
 | Property      | Value                                                                                                 |
 | ------------- | ----------------------------------------------------------------------------------------------------- |
 | route96 image | `voidic/route96` (upstream), rebuilt by `docker/route96.Dockerfile` only to refresh `ca-certificates` |
 | MariaDB image | `mariadb` (official, unmodified)                                                                      |
+| Proxy image   | `nginx` (official, unmodified)                                                                        |
 | Architectures | x86_64, aarch64                                                                                       |
 | Entrypoints   | Upstream defaults; route96 gets `--config /config/config.yaml`, MariaDB `--bind-address=127.0.0.1`    |
 
-Subcontainers: `route96-sub` runs the `route96` daemon, `mariadb-sub` runs the `mariadb` daemon. Attach with `start-cli package attach route96 -n route96-sub -- sh` (or `-n mariadb-sub`).
+Subcontainers: `route96-sub` runs the `route96` daemon, `mariadb-sub` runs the `mariadb` daemon, and `proxy-sub` runs nginx. `route96-perms` prepares blob ownership and config permissions as root before route96 starts as uid 10001. Attach with `start-cli package attach route96 -n route96-sub -- sh` (or `-n mariadb-sub` / `-n proxy-sub`).
 
 The route96 image is built with upstream's media features, including AI labelling and compression. The package's config enables no label models, so nothing is downloaded from HuggingFace and no labelling runs.
 
@@ -66,7 +67,9 @@ Two files on the `startos` volume. `store.json` holds every setting; `config.yam
 | `store.json`  | JSON   | At install: database password, empty whitelist, 100 MiB limit | By the actions                                | Survive, but the actions are the supported path |
 | `config.yaml` | YAML   | Never; generated                                              | Completely, from `store.json`, on every start | Lost on the next start                          |
 
-`config.yaml` carries `listen` (`0.0.0.0:8000`), `database`, `storage_dir` (`/app/data`), `max_upload_bytes`, `public_url` and `whitelist`. Nothing else is set, so payments, label models, retention, cold storage, webhooks and the EXIF and steganography checks are off.
+The proxy's `/etc/nginx/nginx.conf` is generated in its ephemeral rootfs on every start; hand edits do not survive.
+
+`config.yaml` carries `listen` (`127.0.0.1:8001`), `database`, `storage_dir` (`/app/data`), `max_upload_bytes`, `public_url` and `whitelist`. Nothing else is set, so payments, label models, retention, cold storage, webhooks and the EXIF and steganography checks are off.
 
 - `whitelist` is always written as a list of hex pubkeys. npubs entered in the action are decoded first. An empty whitelist is written as the single entry `no-uploaders-configured`, which matches no pubkey, because route96 treats a missing `whitelist` key as "anyone may upload".
 - `public_url` is the Server Settings custom URL if one is set, else the Set Public URL choice, else `http://127.0.0.1:8000`.
@@ -79,7 +82,7 @@ None.
 
 ## Network Access and Interfaces
 
-One HTTP interface serves the whole application.
+One HTTP interface serves the media APIs and web UI through nginx. `/setup` returns `403`; visitors cannot claim the administrator role. The underlying route96 listener is private at `127.0.0.1:8001`, so other services cannot bypass the proxy over the bridge.
 
 | Interface id | Type | Port | Serves                                                                                                   |
 | ------------ | ---- | ---- | -------------------------------------------------------------------------------------------------------- |
@@ -117,7 +120,8 @@ Both tasks are `important`: they never block the service.
 | Check     | Probes                        | Grace | Failure means                                                                                                                                            |
 | --------- | ----------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `mariadb` | `mariadb-admin ping` over TCP | 120 s | MariaDB has not finished starting or is crash-recovering. Persisting past the grace period means a datadir problem; read the `mariadb` lines in the logs |
-| `route96` | `GET http://127.0.0.1:8000/`  | 60 s  | route96 is not listening. It exits if it cannot reach MariaDB or a migration fails; the logs say which                                                   |
+| `route96` | `GET http://127.0.0.1:8001/`  | 60 s  | Internal readiness: route96 is not listening. It exits if it cannot reach MariaDB or a migration fails; the logs say which                                |
+| `proxy`   | `GET http://127.0.0.1:8000/`  | 60 s  | nginx has not started or its generated config is invalid; read the `proxy` lines in the logs                                                          |
 
 ## Backups and Restore
 
@@ -130,7 +134,7 @@ A restored instance needs nothing re-entered. Backups are as large as the stored
 ## Limitations and Differences
 
 1. Uploads are whitelist-only. Upstream's open mode and database-managed whitelist are not offered.
-2. No admin user is created, so the web UI's admin pages (file review, user bans, runtime config) are unavailable.
+2. No admin user is created, and web setup is blocked. The web UI's admin pages (file review, user bans, runtime config) are unavailable.
 3. Payments and per-user quotas are off. There is no total storage cap; disk use is bounded only by the whitelist and free space.
 4. AI labelling, auto-moderation, retention auto-delete, cold storage, webhooks, and EXIF and steganography rejection are off.
 5. NIP-98-authenticated endpoints (NIP-96 uploads, admin API) accept requests only on the public URL's exact scheme, host and port. A client pointed at any other address of the interface is rejected.
@@ -144,7 +148,7 @@ A restored instance needs nothing re-entered. Backups are as large as the stored
 package_id: route96
 image: voidic/route96
 architectures: [x86_64, aarch64]
-subcontainers: [route96-sub, mariadb-sub]
+subcontainers: [route96-sub, mariadb-sub, proxy-sub, route96-perms]
 volumes:
   main: /app/data
   mysql: /var/lib/mysql
@@ -170,4 +174,5 @@ tasks:
 health_checks:
   - mariadb
   - route96
+  - proxy
 ```

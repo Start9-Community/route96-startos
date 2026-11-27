@@ -3,6 +3,40 @@ import { i18n } from './i18n'
 import { sdk } from './sdk'
 
 export const apiPort = 8000
+export const route96Port = 8001
+
+// Public API clients must not be able to claim administrator access.
+export const blossomProxyConfig = `
+worker_processes auto;
+error_log /dev/stderr warn;
+events {}
+http {
+  access_log /dev/stdout;
+  client_max_body_size 0;
+  server {
+    listen ${apiPort};
+    listen [::]:${apiPort};
+    location = /setup {
+      return 403;
+    }
+    location / {
+      proxy_pass http://127.0.0.1:${route96Port};
+      proxy_http_version 1.1;
+      proxy_set_header Host $http_host;
+      proxy_set_header Connection "";
+      proxy_request_buffering off;
+      proxy_buffering off;
+      proxy_read_timeout 3600s;
+    }
+  }
+}
+`
+
+export const checkBlossomApi = (effects: T.Effects, port: number) =>
+  sdk.healthCheck.checkWebUrl(effects, `http://127.0.0.1:${port}/`, {
+    successMessage: i18n('The Blossom API is responding'),
+    errorMessage: i18n('The Blossom API is not responding'),
+  })
 
 export const mainHostId = 'main'
 export const blossomInterfaceId = 'blossom'
@@ -13,6 +47,8 @@ export const DB_NAME = 'route96'
 export const CONFIG_DIR = '/config'
 export const CONFIG_PATH = `${CONFIG_DIR}/config.yaml`
 export const STORAGE_DIR = '/app/data'
+// Upstream image user since v0.8.1 (stays fixed per maintainer; changes are announced in CHANGELOG)
+export const ROUTE96_UID = 10001
 
 // Ready only once TCP is up, which the entrypoint opens after its first-run init.
 export const mariadbDaemons = async (

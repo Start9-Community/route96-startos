@@ -13,6 +13,8 @@ export const DB_NAME = 'route96'
 export const CONFIG_DIR = '/config'
 export const CONFIG_PATH = `${CONFIG_DIR}/config.yaml`
 export const STORAGE_DIR = '/app/data'
+// Upstream image user since v0.8.1 (stays fixed per maintainer; changes are announced in CHANGELOG)
+export const ROUTE96_UID = 10001
 
 // Ready only once TCP is up, which the entrypoint opens after its first-run init.
 export const mariadbDaemons = async (
